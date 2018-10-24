@@ -19,12 +19,18 @@ module Exercises (splitSort, longestCommonSubList,
 -- split a given list into sub-lists 
 -- each of these must be strictly ascending, descending, or equal
 splitSort :: Ord a => [a] -> [[a]] 
-splitSort ns = [[]]
+splitSort [n] = [[n]]
+splitSort (n:ns) 
+
 
 -- Exercise 2
 -- longest common sub-list of a finite list of finite list
 longestCommonSubList :: Eq a => [[a]] -> [a]
-longestCommonSubList xs = []
+longestCommonSubList [] = []
+longestCommonSubList (xs:xss) 
+        | length xs > length (longestCommonSubList(xss)) = xs
+        | otherwise            = longestCommonSubList(xss)
+        where y = longestCommonSubList(xss)
 
 -- Exercise 3
 -- check whether the given results are sufficient to pass the year 
