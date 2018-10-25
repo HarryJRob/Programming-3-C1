@@ -24,7 +24,7 @@ splitSort [x] = [[x]]
 splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
     where 
         state = compare x x'
-        (out,remaining) = span ((==state) . (uncurry compare)) (zip (x':xs) xs)
+        (out,remaining) = span ((==state) . uncurry compare) zip (x':xs) xs
         -- ((==state) . uncurry compare)
         -- uncurry compare creates a function which works on tuples
         -- '.' composes the two functions
@@ -36,7 +36,7 @@ splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
 longestCommonSubList :: Eq a => [[a]] -> [a]
 longestCommonSubList [] = []
 longestCommonSubList [xs] = xs
-longestCommonSubList xss@(ys:ys':yss) = foldl1 intersection xss
+longestCommonSubList xss = foldr1 intersection xss
     where 
         intersection xs ys = [ x | x <- xs , y <- ys, x == y]
 
