@@ -19,18 +19,26 @@ module Exercises (splitSort, longestCommonSubList,
 -- split a given list into sub-lists 
 -- each of these must be strictly ascending, descending, or equal
 splitSort :: Ord a => [a] -> [[a]] 
-splitSort [n] = [[n]]
-splitSort (n:ns) 
-
+splitSort [] = []
+splitSort [x] = [[x]]
+splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
+    where 
+        state = compare x x'
+        (out,remaining) = span ((==state) . (uncurry compare)) (zip (x':xs) xs)
+        -- ((==state) . uncurry compare)
+        -- uncurry compare creates a function which works on tuples
+        -- '.' composes the two functions
+        -- Thefore only when the comparison of the current tuple results the same as the state previously determined then it will be added to the 'out' list
+        -- This is done until the condition is failed which is then added to the 'remaining' list
 
 -- Exercise 2
 -- longest common sub-list of a finite list of finite list
 longestCommonSubList :: Eq a => [[a]] -> [a]
 longestCommonSubList [] = []
-longestCommonSubList (xs:xss) 
-        | length xs > length (longestCommonSubList(xss)) = xs
-        | otherwise            = longestCommonSubList(xss)
-        where y = longestCommonSubList(xss)
+longestCommonSubList [xs] = xs
+longestCommonSubList xss@(ys:ys':yss) = foldl1 intersection xss
+    where 
+        intersection xs ys = [ x | x <- xs , y <- ys, x == y]
 
 -- Exercise 3
 -- check whether the given results are sufficient to pass the year 

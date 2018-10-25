@@ -69,8 +69,9 @@ tests =
       [ 
          ("drawEllipse 0.0 0.0 0.1 0.1 = [Rectangle (0,0) (0,0)]", 
            drawEllipse 0.0 0.0 0.1 0.1 == [Rectangle (0,0) (0,0)]),
-         ("drawEllipse 0.0 0.0 1.0 1.0 = [Rectangle (-1,0) (-1,0),Rectangle (0,-1) (0,1),Rectangle (1,0) (1,0)]", 
-           drawEllipse 0.0 0.0 1.0 1.0 == [Rectangle (-1,0) (-1,0),Rectangle (0,-1) (0,1),Rectangle (1,0) (1,0)])
+         ("drawEllipse 0.0 0.0 1.0 1.0 = [Rectangle (-1,0) (1,0),Rectangle (0,-1) (0,1)] or vice versa", 
+           drawEllipse 0.0 0.0 1.0 1.0 `elem` [[Rectangle (-1,0) (1,0),Rectangle (0,-1) (0,1)],
+              [Rectangle (0,-1) (0,1),Rectangle (-1,0) (1,0)]])
       ]),
     ("Exercise 12: extractMessage",
       [ 
@@ -116,7 +117,9 @@ isDifferentStream :: [[Int]] -> [Int] -> Int -> Bool
 isDifferentStream nns ns n = 
     let ns' = take n ns
         nns' = map (take n) (take n nns) 
-    in not (ns' `elem` nns')
+    in length ns' == 10 && 
+       all (\xs -> length xs == 10) nns' &&
+       not (ns' `elem` nns')
 
 -- coarse test for approximation floating point equality 
 approxEqual :: Float -> Float -> Bool
