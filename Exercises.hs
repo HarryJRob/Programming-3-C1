@@ -15,6 +15,11 @@ module Exercises (splitSort, longestCommonSubList,
     findBusyBeavers, Rectangle (Rectangle), simplifyRectangleList, drawEllipse, 
     extractMessage, differentStream, unPairAndApply, isShellTreeSum) where
      
+
+--TODO: Remove me
+import Debug.Trace (trace)
+
+
 -- Exercise 1
 -- split a given list into sub-lists 
 -- each of these must be strictly ascending, descending, or equal
@@ -24,7 +29,7 @@ splitSort [x] = [[x]]
 splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
     where 
         state = compare x x'
-        (out,remaining) = span ((==state) . uncurry compare) zip (x':xs) xs
+        (out,remaining) = span ((==state) . uncurry compare) (zip (x':xs) xs)
         -- ((==state) . uncurry compare)
         -- uncurry compare creates a function which works on tuples
         -- '.' composes the two functions
@@ -58,7 +63,23 @@ classify ms = Third
 -- search for the local maximum of f nearest x using an 
 -- approximation margin delta and initial step value s
 hillClimb :: (Float -> Float) -> Float -> Float -> Float -> Float
-hillClimb d x x' eps = 0.0
+hillClimb d x x' eps
+        | (x' - x) <= sqrt eps   = (x' + x)/2
+        | d x2 > d x1           = hillClimb d x x1 eps
+        | otherwise             = hillClimb d x2 x' eps
+        where
+            invphi      = (sqrt 5 - 1) /2
+            dist        = invphi*(x' - x)
+            x1          = x + dist
+            x2          = x' - dist
+
+-- d = function
+-- x'= upper boundary of the search
+-- x = lower boundary of the search
+-- eps = tolerance
+-- x1 = first comparison point phi ratio from the upper bound / total width
+-- x2 = second comparison point phi ratio from the lowerbound / total width
+
 
 -- Exercise 6
 nearestRoot :: [Float] -> Float -> Float -> Float -> Float
