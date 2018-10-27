@@ -87,11 +87,17 @@ nearestRoot xs x x' eps = hillClimb (f.f) x x' eps
 -- Exercise 7
 data Instruction = Add | Subtract | Multiply | Duplicate | Pop deriving (Eq, Show)
 executeInstructionSequence :: [Int] -> [Instruction] -> [Int]
-executeInstructionSequence ns ins = []
+executeInstructionSequence ns [] = ns
+executeInstructionSequence ns@(x:x':xs) ins@(y:ys)
+            | y == Add          = (x+x'):executeInstructionSequence xs ys
+            | y == Subtract     = (x-x'):executeInstructionSequence xs ys
+            | y == Multiply     = (x*x'):executeInstructionSequence xs ys
+            | y == Duplicate    = executeInstructionSequence (x:x:x':xs) ys
+            | y == Pop          = executeInstructionSequence (x':xs) ys
 
 -- Exercise 8
 optimalSequence :: Int -> [Instruction]
-optimalSequence n = [] 
+optimalSequence n = concat (replicate (n-1) [Duplicate, Multiply])
 
 -- Exercise 9
 findBusyBeavers :: [Int] -> [[Instruction]]
