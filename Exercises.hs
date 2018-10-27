@@ -60,14 +60,14 @@ classify ms = Third
 -- approximation margin delta and initial step value s
 hillClimb :: (Float -> Float) -> Float -> Float -> Float -> Float
 hillClimb d x x' eps
-        | (x' - x) <= sqrt eps  = (x' + x)/2
-        | d x2 > d x1           = hillClimb d x x1 eps
-        | otherwise             = hillClimb d x2 x' eps
-        where
-            invphi      = (sqrt 5 - 1) /2
-            dist        = invphi*(x' - x)
-            x1          = x + dist
-            x2          = x' - dist
+    | (x' - x) <= sqrt eps  = (x' + x)/2
+    | d x2 > d x1           = hillClimb d x x1 eps
+    | otherwise             = hillClimb d x2 x' eps
+    where
+        invphi      = (sqrt 5 - 1) /2
+        dist        = invphi*(x' - x)
+        x1          = x + dist
+        x2          = x' - dist
 -- d = function
 -- x'= upper boundary of the search
 -- x = lower boundary of the search
@@ -79,20 +79,19 @@ hillClimb d x x' eps
 -- Exercise 6
 nearestRoot :: [Float] -> Float -> Float -> Float -> Float
 nearestRoot xs x x' eps = hillClimb f x x' eps
-        where
-            ys = zip xs [0..]
-            f x = (-1)*(foldr1 (+) (map (\(a,b) -> a*x^b ) ys))^2
+    where
+        ys = zip xs [0..]
+        f x = (-1)*(foldr1 (+) (map (\(a,b) -> a*x^b ) ys))^2
 
 -- Exercise 7
 data Instruction = Add | Subtract | Multiply | Duplicate | Pop deriving (Eq, Show)
 executeInstructionSequence :: [Int] -> [Instruction] -> [Int]
 executeInstructionSequence ns [] = ns
 executeInstructionSequence ns@(x:x':xs) ins@(y:ys)
-            | y == Add          = (x+x'):executeInstructionSequence xs ys
-            | y == Subtract     = (x-x'):executeInstructionSequence xs ys
-            | y == Multiply     = (x*x'):executeInstructionSequence xs ys
-            | y == Duplicate    = executeInstructionSequence (x:x:x':xs) ys
-            | y == Pop          = executeInstructionSequence (x':xs) ys
+    | y == Add          = (x+x'):executeInstructionSequence xs ys
+    | y == Multiply     = (x*x'):executeInstructionSequence xs ys
+    | y == Duplicate    = executeInstructionSequence (x:x:x':xs) ys
+    | y == Pop          = executeInstructionSequence (x':xs) ys
 
 -- Exercise 8
 optimalSequence :: Int -> [Instruction]
@@ -116,22 +115,22 @@ drawEllipse x y a b = []
 -- extract a message hidden using a simple steganography technique
 extractMessage :: String -> String
 extractMessage s = convert (extract s)
-            where 
-                extract :: String -> String
-                extract [] = []
-                extract (x:xs) 
-                    | [x] == "0" || [x] == "1"      = [x] ++ (extract xs)
-                    | otherwise                     = extract xs
+    where 
+        extract :: String -> String
+        extract [] = []
+        extract (x:xs) 
+            | [x] == "0" || [x] == "1"      = [x] ++ (extract xs)
+            | otherwise                     = extract xs
 
-                convert :: String -> String
-                convert [] = []
-                convert (x:x':xs)
-                    | input == "00"     = "a" ++ (convert xs)
-                    | input == "01"     = "b" ++ (convert xs)
-                    | input == "10"     = "c" ++ (convert xs)
-                    | input == "11"     = "d" ++ (convert xs)
-                    where
-                        input = [x] ++ [x']
+        convert :: String -> String
+        convert [] = []
+        convert (x:x':xs)
+            | input == "00"     = "a" ++ (convert xs)
+            | input == "01"     = "b" ++ (convert xs)
+            | input == "10"     = "c" ++ (convert xs)
+            | input == "11"     = "d" ++ (convert xs)
+            where
+                input = [x] ++ [x']
 
 -- Exercise 13
 -- return a stream which is different from all streams of the given stream
@@ -142,7 +141,17 @@ differentStream ss = []
 -- Exercise 14
 -- extract both components from a square shell pair and apply the (curried) function
 unPairAndApply :: Int -> (Int -> Int -> a) -> a
-unPairAndApply n f = f 0 0
+unPairAndApply n f = f a b
+    where
+        (a,b) = reverseSquareShell n
+
+        reverseSquareShell :: Int -> (Int,Int)
+        reverseSquareShell z
+            | z - m^2 < m       = (z-m^2,m)
+            | otherwise         = (m,m^2 + 2*m - z)
+            where 
+                m = floor (sqrt (fromIntegral z))
+
 
 -- Exercise 15
 isShellTreeSum :: Int -> Bool
