@@ -68,7 +68,6 @@ hillClimb d x x' eps
             dist        = invphi*(x' - x)
             x1          = x + dist
             x2          = x' - dist
-
 -- d = function
 -- x'= upper boundary of the search
 -- x = lower boundary of the search
@@ -79,10 +78,10 @@ hillClimb d x x' eps
 
 -- Exercise 6
 nearestRoot :: [Float] -> Float -> Float -> Float -> Float
-nearestRoot xs x x' eps = hillClimb (f.f) x x' eps
+nearestRoot xs x x' eps = hillClimb f x x' eps
         where
             ys = zip xs [0..]
-            f x = foldr1 (+) (map (\(a,b) -> a*x^b ) ys)
+            f x = (-1)*(foldr1 (+) (map (\(a,b) -> a*x^b ) ys))^2
 
 -- Exercise 7
 data Instruction = Add | Subtract | Multiply | Duplicate | Pop deriving (Eq, Show)
@@ -116,7 +115,23 @@ drawEllipse x y a b = []
 -- Exercise 12
 -- extract a message hidden using a simple steganography technique
 extractMessage :: String -> String
-extractMessage s = ""
+extractMessage s = convert (extract s)
+            where 
+                extract :: String -> String
+                extract [] = []
+                extract (x:xs) 
+                    | [x] == "0" || [x] == "1"      = [x] ++ (extract xs)
+                    | otherwise                     = extract xs
+
+                convert :: String -> String
+                convert [] = []
+                convert (x:x':xs)
+                    | input == "00"     = "a" ++ (convert xs)
+                    | input == "01"     = "b" ++ (convert xs)
+                    | input == "10"     = "c" ++ (convert xs)
+                    | input == "11"     = "d" ++ (convert xs)
+                    where
+                        input = [x] ++ [x']
 
 -- Exercise 13
 -- return a stream which is different from all streams of the given stream
