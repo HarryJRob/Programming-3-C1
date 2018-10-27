@@ -16,10 +16,6 @@ module Exercises (splitSort, longestCommonSubList,
     extractMessage, differentStream, unPairAndApply, isShellTreeSum) where
      
 
---TODO: Remove me
-import Debug.Trace (trace)
-
-
 -- Exercise 1
 -- split a given list into sub-lists 
 -- each of these must be strictly ascending, descending, or equal
@@ -64,7 +60,7 @@ classify ms = Third
 -- approximation margin delta and initial step value s
 hillClimb :: (Float -> Float) -> Float -> Float -> Float -> Float
 hillClimb d x x' eps
-        | (x' - x) <= sqrt eps   = (x' + x)/2
+        | (x' - x) <= sqrt eps  = (x' + x)/2
         | d x2 > d x1           = hillClimb d x x1 eps
         | otherwise             = hillClimb d x2 x' eps
         where
@@ -83,7 +79,10 @@ hillClimb d x x' eps
 
 -- Exercise 6
 nearestRoot :: [Float] -> Float -> Float -> Float -> Float
-nearestRoot xs x x' eps = 0.0
+nearestRoot xs x x' eps = hillClimb (f.f) x x' eps
+        where
+            ys = zip xs [0..]
+            f x = foldr1 (+) (map (\(a,b) -> a*x^b ) ys)
 
 -- Exercise 7
 data Instruction = Add | Subtract | Multiply | Duplicate | Pop deriving (Eq, Show)
