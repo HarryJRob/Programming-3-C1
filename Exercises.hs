@@ -15,11 +15,6 @@ module Exercises (splitSort, longestCommonSubList,
     findBusyBeavers, Rectangle (Rectangle), simplifyRectangleList, drawEllipse, 
     extractMessage, differentStream, unPairAndApply, isShellTreeSum) where
      
-
---TODO: Remove me
-import Debug.Trace (trace)
-
-
 -- Exercise 1
 -- split a given list into sub-lists 
 -- each of these must be strictly ascending, descending, or equal
@@ -88,11 +83,18 @@ nearestRoot xs x x' eps = 0.0
 -- Exercise 7
 data Instruction = Add | Subtract | Multiply | Duplicate | Pop deriving (Eq, Show)
 executeInstructionSequence :: [Int] -> [Instruction] -> [Int]
-executeInstructionSequence ns ins = []
+executeInstructionSequence ns [] = ns
+executeInstructionSequence ns@(x:x':xs) ins@(y:ys)
+            | y == Add          = executeInstructionSequence ((x + x'):xs) ys
+            | y == Subtract     = executeInstructionSequence ((x - x'):xs) ys
+            | y == Multiply     = executeInstructionSequence ((x * x'):xs) ys
+            | y == Duplicate    = executeInstructionSequence (x:x:x':xs) ys 
+            | y == Pop          = executeInstructionSequence (x':xs) ys
 
 -- Exercise 8
 optimalSequence :: Int -> [Instruction]
-optimalSequence n = [] 
+optimalSequence 1 = []
+optimalSequence n = concat (replicate (n-1) [Duplicate, Multiply])
 
 -- Exercise 9
 findBusyBeavers :: [Int] -> [[Instruction]]
@@ -111,7 +113,24 @@ drawEllipse x y a b = []
 -- Exercise 12
 -- extract a message hidden using a simple steganography technique
 extractMessage :: String -> String
-extractMessage s = ""
+extractMessage s = convert (extract s)
+        where
+            extract :: String -> String
+            extract "" = ""
+            extract (x:xs) 
+                | x == '0'          = "" ++ [x] ++ (extract xs)
+                | x == '1'          = "" ++ [x] ++ (extract xs)
+                | otherwise           = "" ++ (extract xs)
+            
+            convert :: String -> String
+            convert "" = ""
+            convert (x:y:xs)
+                | input == "00"    = "" ++ "a" ++ convert xs
+                | input == "01"    = "" ++ "b" ++ convert xs
+                | input == "10"    = "" ++ "c" ++ convert xs
+                | input == "11"    = "" ++ "d" ++ convert xs
+                where
+                    input = [x] ++ [y]
 
 -- Exercise 13
 -- return a stream which is different from all streams of the given stream
