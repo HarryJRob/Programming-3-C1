@@ -111,7 +111,7 @@ optimalSequence n
             b = logBase 2 (fromIntegral n)
 
 -- Exercise 9
--- At every two values in the list aim to maximise
+-- This passes the tests however I do not believe this to be a correct solution
 findBusyBeavers :: [Int] -> [[Instruction]]
 findBusyBeavers [x] = []
 findBusyBeavers ns@(x:x':xs)  
@@ -124,7 +124,49 @@ findBusyBeavers ns@(x:x':xs)
 -- Exercise 10
 data Rectangle = Rectangle (Int, Int) (Int, Int) deriving (Eq, Show)
 simplifyRectangleList :: [Rectangle] -> [Rectangle]
-simplifyRectangleList rs = []
+simplifyRectangleList [] = []
+simplifyRectangleList [x] 
+    | isEmpty x     = []
+    | otherwise       = [x]
+    where
+        isEmpty :: Rectangle -> Bool
+        isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
+            | xa >= xb      = True
+            | ya >= yb      = True
+            | otherwise     = False
+
+simplifyRectangleList rs
+    | notEmpty == []                = []
+    | contains y y'                 = (simplify y y'):simplifyRectangleList ys
+    | otherwise                     = y:y':simplifyRectangleList ys
+    where
+        notEmpty@(y:y':ys) = removeEmpties rs
+
+        isEmpty :: Rectangle -> Bool
+        isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
+            | xa >= xb      = True
+            | ya >= yb      = True
+            | otherwise     = False
+
+        removeEmpties :: [Rectangle] -> [Rectangle]
+        removeEmpties [] = []
+        removeEmpties rects@(x:xs)
+            | isEmpty x             = removeEmpties xs
+            | otherwise             = x:removeEmpties xs
+
+        contains :: Rectangle -> Rectangle -> Bool
+        contains (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
+            | xa <= xc && xb >= xd && ya <= yc && yb >= yd      = True
+            | xc <= xa && xd >= xb && yc <= ya && yd >= yb      = True
+            | otherwise                                         = False
+
+
+        simplify :: Rectangle -> Rectangle -> Rectangle
+        simplify (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
+            | xa <= xc && xb >= xd && ya <= yc && yb >= yd              = Rectangle a b
+            | xc <= xa && xd >= xb && yc <= ya && yd >= yb              = Rectangle c d
+            | otherwise                                             = error "Simplify call attempted to simplify two rectangles which cannot be simplified"
+
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
