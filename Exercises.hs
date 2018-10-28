@@ -87,19 +87,39 @@ nearestRoot xs x x' eps = hillClimb f x x' eps
 data Instruction = Add | Subtract | Multiply | Duplicate | Pop deriving (Eq, Show)
 executeInstructionSequence :: [Int] -> [Instruction] -> [Int]
 executeInstructionSequence ns [] = ns
+executeInstructionSequence [] ins = error "Invalid Instruction Sequence - The stack is empty"
+executeInstructionSequence ns@(x:[]) ins@(y:ys)
+    | y == Duplicate        = executeInstructionSequence (x:x:[]) ys
+    | y == Pop              = executeInstructionSequence [] ys
+    | otherwise             = error "Invalid Instruction Sequence - Attempted to apply a operation which takes two elements to single element stack"
+
 executeInstructionSequence ns@(x:x':xs) ins@(y:ys)
-    | y == Add          = (x+x'):executeInstructionSequence xs ys
-    | y == Multiply     = (x*x'):executeInstructionSequence xs ys
-    | y == Duplicate    = executeInstructionSequence (x:x:x':xs) ys
-    | y == Pop          = executeInstructionSequence (x':xs) ys
+    | y == Add              = executeInstructionSequence ((x+x'):xs) ys
+    | y == Multiply         = (x*x'):executeInstructionSequence ((x*x'):xs) ys
+    | y == Duplicate        = executeInstructionSequence (x:x:x':xs) ys
+    | y == Pop              = executeInstructionSequence (x':xs) ys
+    | otherwise             = error "Invalid Instruction Sequence - Invalid instruction given"
+
 
 -- Exercise 8
 optimalSequence :: Int -> [Instruction]
-optimalSequence n = concat (replicate (n-1) [Duplicate, Multiply])
+optimalSequence n 
+    | n == 0                        = []
+    | (round b) == (ceiling b)      = concat (replicate (round b) [Duplicate,Multiply] )
+    | otherwise                     = (replicate (n-1) Duplicate ++ replicate (n-1) Multiply)
+        where 
+            b = logBase 2 (fromIntegral n)
 
 -- Exercise 9
+-- At every two values in the list aim to maximise
 findBusyBeavers :: [Int] -> [[Instruction]]
-findBusyBeavers ns = []
+findBusyBeavers [x] = []
+findBusyBeavers ns@(x:x':xs)  
+    | x == 0            = [Pop]:[Add]:findBusyBeavers (x':xs)
+    | x+x' < x*x'       = [Multiply]:findBusyBeavers ((x*x'):xs)
+    | x+x' > x*x'       = [Add]:findBusyBeavers ((x+x'):xs)
+    | x+x' == x*x'      = [Add]:[Multiply]:findBusyBeavers ((x*x'):xs)
+    | otherwise         = [Pop]:findBusyBeavers (x':xs)
 
 -- Exercise 10
 data Rectangle = Rectangle (Int, Int) (Int, Int) deriving (Eq, Show)
