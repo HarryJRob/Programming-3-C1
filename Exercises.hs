@@ -34,6 +34,7 @@ splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
 
 -- Exercise 2
 -- longest common sub-list of a finite list of finite list
+-- Currently does not do as intended
 longestCommonSubList :: Eq a => [[a]] -> [a]
 longestCommonSubList [] = []
 longestCommonSubList [xs] = xs
@@ -46,14 +47,46 @@ longestCommonSubList xss = foldr1 intersection xss
 -- and progress using the University of Southampton Calendar regulations
 data ModuleResult = ModuleResult { credit :: Float, mark :: Int} deriving Show
 canProgress :: [ModuleResult] -> Bool
-canProgress ms = False
+canProgress ms 
+    | sum credits >= 60 && all (>= 40) marks                                                                        = True  --Normal Pass
+    | all (>= 25) marks && sum marks `div` length marks >= 40 && sum [ (credit y) | y <- ms, (mark y) < 40] <= 15   = True  --Pass by compensation
+    | otherwise                                                                                                     = False 
+    where 
+        marks = getMarks ms
+        credits = getCredits ms
+
+        getCredits :: [ModuleResult] -> [Float]
+        getCredits [] = []
+        getCredits (x:xs) = (credit x):getCredits xs
+
+        getMarks :: [ModuleResult] -> [Int]
+        getMarks [] = []
+        getMarks (x:xs) = (mark x):getMarks xs
 
 -- Exercise 4
 -- compute the degree classification associate with 3 or 4 year's worth of results
 -- using the regulations given in the University of Southampton Calendar
 data DegreeClass = First | UpperSecond | LowerSecond | Third deriving (Eq, Show)
 classify :: [[ModuleResult]] -> DegreeClass
-classify ms = Third 
+classift ms = error "Invalid number of years of results passed"
+classify ms@(y1:y2:y3:[]) 
+    | hasPassed == False    = error "This student has not passed all of their years"
+    | = Third
+    | = LowerSecond
+    | = UpperSecond
+    | = First
+    where
+        hasPassed = canProgress y1 && canProgress y2 && canProgress y3
+
+
+classify ms@(y1:y2:y3:y4:[]) = Third
+    | hasPassed == False    = error "This student has not passed all of their years"
+    | = Third
+    | = LowerSecond
+    | = UpperSecond
+    | = First
+    where
+        hasPassed = canProgress y1 && canProgress y2 && canProgress y3 && canProgress y4
 
 -- Exercise 5
 -- search for the local maximum of f nearest x using an 
