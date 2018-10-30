@@ -38,9 +38,18 @@ splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
 longestCommonSubList :: Eq a => [[a]] -> [a]
 longestCommonSubList [] = []
 longestCommonSubList [xs] = xs
-longestCommonSubList xss = foldr1 intersection xss
+longestCommonSubList xss = foldr1 mutualsElems xss
     where 
-        intersection xs ys = [ x | x <- xs , y <- ys, x == y]
+        mutualsElems :: Eq a => [a] -> [a] -> [a]
+        mutualsElems [] _ = []
+        mutualsElems (x : xs) ys 
+            | x `elem` ys   = x : mutualsElems xs (removeElem x ys)
+            | otherwise     = mutualsElems xs ys
+
+        removeElem :: Eq a => a -> [a] -> [a]
+        removeElem z zs = accepted ++ (tail rejected)
+            where
+                (accepted,rejected) = span (/=z) zs
 
 -- Exercise 3
 -- check whether the given results are sufficient to pass the year 
@@ -94,6 +103,7 @@ classify ms@(y1:y2:y3:[])
     | finalAverageMark >= 38 && ((1/3)*(avgCredGTEQ y2 40) + (2/3)*(avgCredGTEQ y3 40)) >= 50   = Third
     | otherwise                                                                                 = error "This student has failed"
     where
+        hasPassed = canProgress y1 && canProgress y2 && canProgress y3
         finalAverageMark = round ((1/3)*y2Avg + (2/3)*y3Avg)
 
         y2Avg = fromIntegral (sum $ getMarks y2) / fromIntegral (length y2)
@@ -304,4 +314,19 @@ unPairAndApply n f = f a b
 
 -- Exercise 15
 isShellTreeSum :: Int -> Bool
-isShellTreeSum n = False
+isShellTreeSum n 
+    | squareShellPair (t,v) == n         = True
+    | otherwise                         = False
+    where
+        (t,v) = reverseSquareShell n
+        -- value of Tree and Value of sum of node values
+
+        reverseSquareShell :: Int -> (Int,Int)
+        reverseSquareShell z
+            | z - m^2 < m       = (z-m^2,m)
+            | otherwise         = (m,m^2 + 2*m - z)
+            where 
+                m = floor (sqrt (fromIntegral z))
+
+        squareShellPair :: (Int,Int) -> Int
+        squareShellPair (x,y) = (max x y)^2 + max x y + x - y
