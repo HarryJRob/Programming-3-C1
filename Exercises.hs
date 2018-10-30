@@ -48,9 +48,9 @@ longestCommonSubList xss = foldr1 intersection xss
 data ModuleResult = ModuleResult { credit :: Float, mark :: Int} deriving Show
 canProgress :: [ModuleResult] -> Bool
 canProgress ms 
-    | sum credits >= 60 && all (>= 40) marks                                                                        = True  --Normal Pass
-    | all (>= 25) marks && sum marks `div` length marks >= 40 && sum [ (credit y) | y <- ms, (mark y) < 40] <= 15   = True  --Pass by compensation
-    | otherwise                                                                                                     = False 
+    | sum credits >= 60 && all (>= 40) marks                                                                                                            = True  --Normal Pass
+    | all (>= 25) marks && round (fromIntegral (sum marks) / fromIntegral (length marks)) >= 40 && sum [ (credit y) | y <- ms, (mark y) < 40] <= 15     = True  --Pass by compensation
+    | otherwise                                                                                                                                         = False 
     where 
         marks = getMarks ms
         credits = getCredits ms
@@ -66,27 +66,81 @@ canProgress ms
 -- Exercise 4
 -- compute the degree classification associate with 3 or 4 year's worth of results
 -- using the regulations given in the University of Southampton Calendar
+
+-- Weighting of Parts
+    -- Part I work shall be excluded from the final degree classification. A weighting of 0:1:2 shall be
+    -- used to obtain the Final Average Mark for the three Parts of an Honours degree programme, and
+    -- a weighting of 0:1:2:2 for the four Parts of an integrated Masters programme. This is in addition
+    -- to weighting by credit points (for example, where Parts III and IV do not contain the same
+    -- number of credit points).
+
+-- Classification Algorithm
+    -- The class awarded shall be that within which the Final Average Mark rounded to the nearest
+    -- integer falls. The next higher class will be awarded if the unrounded Final Average Mark is within
+    -- 2 marks of the higher class and at least 50% of the credit points, weighted by Part, are derived
+    -- from Module Marks in the higher class or above.
 data DegreeClass = First | UpperSecond | LowerSecond | Third deriving (Eq, Show)
 classify :: [[ModuleResult]] -> DegreeClass
 classift ms = error "Invalid number of years of results passed"
 classify ms@(y1:y2:y3:[]) 
-    | hasPassed == False    = error "This student has not passed all of their years"
-    | = Third
-    | = LowerSecond
-    | = UpperSecond
-    | = First
+    | hasPassed == False                                                                        = error "This student has failed one of their years"
+    | finalAverageMark >= 70                                                                    = First
+    | finalAverageMark >= 68 && ((1/3)*(avgCredGTEQ y2 70) + (2/3)*(avgCredGTEQ y3 70)) >= 50   = First
+    | finalAverageMark >= 60                                                                    = UpperSecond
+    | finalAverageMark >= 58 && ((1/3)*(avgCredGTEQ y2 60) + (2/3)*(avgCredGTEQ y3 60)) >= 50   = UpperSecond
+    | finalAverageMark >= 50                                                                    = LowerSecond
+    | finalAverageMark >= 48 && ((1/3)*(avgCredGTEQ y2 50) + (2/3)*(avgCredGTEQ y3 50)) >= 50   = LowerSecond
+    | finalAverageMark >= 40                                                                    = Third
+    | finalAverageMark >= 38 && ((1/3)*(avgCredGTEQ y2 40) + (2/3)*(avgCredGTEQ y3 40)) >= 50   = Third
+    | otherwise                                                                                 = error "This student has failed"
     where
-        hasPassed = canProgress y1 && canProgress y2 && canProgress y3
+        finalAverageMark = round ((1/3)*y2Avg + (2/3)*y3Avg)
 
+        y2Avg = fromIntegral (sum $ getMarks y2) / fromIntegral (length y2)
+        y3Avg = fromIntegral (sum $ getMarks y3) / fromIntegral (length y3)
 
-classify ms@(y1:y2:y3:y4:[]) = Third
-    | hasPassed == False    = error "This student has not passed all of their years"
-    | = Third
-    | = LowerSecond
-    | = UpperSecond
-    | = First
+        getCreditsWithMarkGTEQ :: [ModuleResult] -> Int -> [Float]
+        getCreditsWithMarkGTEQ ms n = [ (credit m) | m <- ms, (mark m) >= n]
+
+        avgCredGTEQ :: [ModuleResult] -> Int -> Float
+        avgCredGTEQ ms n = (sum $ getCreditsWithMarkGTEQ ms n) / fromIntegral (length ms)
+
+        getMarks :: [ModuleResult] -> [Int]
+        getMarks [] = []
+        getMarks (x:xs) = (mark x):getMarks xs
+
+        getCredits :: [ModuleResult] -> [Float]
+        getCredits [] = []
+        getCredits (x:xs) = (credit x):getCredits xs
+
+classify ms@(y1:y2:y3:y4:[])
+    | hasPassed == False                                                                                                    = error "This student has failed one of their years"
+    | finalAverageMark >= 70                                                                                                = First
+    | finalAverageMark >= 68 && ((1/5)*(avgCredGTEQ y2 70) + (2/5)*(avgCredGTEQ y3 70) + (2/5)*(avgCredGTEQ y4 70)) >= 50   = First
+    | finalAverageMark >= 60                                                                                                = UpperSecond
+    | finalAverageMark >= 58 && ((1/5)*(avgCredGTEQ y2 60) + (2/5)*(avgCredGTEQ y3 60) + (2/5)*(avgCredGTEQ y4 60)) >= 50   = UpperSecond
+    | finalAverageMark >= 50                                                                                                = LowerSecond
+    | finalAverageMark >= 48 && ((1/5)*(avgCredGTEQ y2 50) + (2/5)*(avgCredGTEQ y3 50) + (2/5)*(avgCredGTEQ y4 50)) >= 50   = LowerSecond
+    | finalAverageMark >= 40                                                                                                = Third
+    | finalAverageMark >= 38 && ((1/5)*(avgCredGTEQ y2 40) + (2/5)*(avgCredGTEQ y3 40) + (2/5)*(avgCredGTEQ y4 40)) >= 50   = Third
+    | otherwise                                                                                                             = error "This student has failed their degree"
     where
         hasPassed = canProgress y1 && canProgress y2 && canProgress y3 && canProgress y4
+        finalAverageMark = round (0.2*y2Avg + 0.4*y3Avg + 0.4*y4Avg)
+
+        y2Avg = fromIntegral (sum $ getMarks y2) / fromIntegral (length y2)
+        y3Avg = fromIntegral (sum $ getMarks y3) / fromIntegral (length y3)
+        y4Avg = fromIntegral (sum $ getMarks y4) / fromIntegral (length y4)
+
+        getCreditsWithMarkGTEQ :: [ModuleResult] -> Int -> [Float]
+        getCreditsWithMarkGTEQ ms n = [ (credit m) | m <- ms, mark m >= n]
+
+        avgCredGTEQ :: [ModuleResult] -> Int -> Float
+        avgCredGTEQ ms n = (sum $ getCreditsWithMarkGTEQ ms n) / fromIntegral (length ms)
+
+        getMarks :: [ModuleResult] -> [Int]
+        getMarks [] = []
+        getMarks (x:xs) = (mark x):getMarks xs
 
 -- Exercise 5
 -- search for the local maximum of f nearest x using an 
@@ -198,7 +252,7 @@ simplifyRectangleList rs
         simplify (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
             | xa <= xc && xb >= xd && ya <= yc && yb >= yd              = Rectangle a b
             | xc <= xa && xd >= xb && yc <= ya && yd >= yb              = Rectangle c d
-            | otherwise                                             = error "Simplify call attempted to simplify two rectangles which cannot be simplified"
+            | otherwise                                                 = error "Simplify call attempted to simplify two rectangles which cannot be simplified"
 
 
 -- Exercise 11
