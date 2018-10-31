@@ -208,15 +208,18 @@ optimalSequence n
             b = logBase 2 (fromIntegral n)
 
 -- Exercise 9
--- This passes the tests however I do not believe this to be a correct solution
 findBusyBeavers :: [Int] -> [[Instruction]]
 findBusyBeavers [x] = []
 findBusyBeavers ns@(x:x':xs)  
-    | x == 0            = [Pop]:[Add]:findBusyBeavers (x':xs)
-    | x+x' < x*x'       = [Multiply]:findBusyBeavers ((x*x'):xs)
-    | x+x' > x*x'       = [Add]:findBusyBeavers ((x+x'):xs)
-    | x+x' == x*x'      = [Add]:[Multiply]:findBusyBeavers ((x*x'):xs)
-    | otherwise         = [Pop]:findBusyBeavers (x':xs)
+    | x == 0            = (possibilities [Pop] $ findBusyBeavers (x':xs)) ++ (possibilities [Add] $ findBusyBeavers (x':xs))
+    | x+x' < x*x'       = possibilities [Multiply] $ findBusyBeavers ((x*x'):xs)
+    | x+x' > x*x'       = possibilities [Add] $ findBusyBeavers ((x+x'):xs)
+    | x+x' == x*x'      = (possibilities [Add] $ findBusyBeavers ((x*x'):xs)) ++ (possibilities [Multiply] $ findBusyBeavers ((x*x'):xs))
+    | otherwise         = possibilities [Pop] $ findBusyBeavers (x':xs)
+    where
+        possibilities :: [Instruction] -> [[Instruction]] -> [[Instruction]]
+        possibilities as [] = [as]
+        possibilities as bss = [ as ++ bs | bs <- bss]
 
 -- Exercise 10
 data Rectangle = Rectangle (Int, Int) (Int, Int) deriving (Eq, Show)
