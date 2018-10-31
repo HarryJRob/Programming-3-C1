@@ -34,7 +34,6 @@ splitSort ns@(x:x':xs) = (x:x':(map snd out)):splitSort (map snd remaining)
 
 -- Exercise 2
 -- longest common sub-list of a finite list of finite list
--- Currently does not do as intended
 longestCommonSubList :: Eq a => [[a]] -> [a]
 longestCommonSubList [] = []
 longestCommonSubList [xs] = xs
@@ -90,7 +89,7 @@ canProgress ms
     -- from Module Marks in the higher class or above.
 data DegreeClass = First | UpperSecond | LowerSecond | Third deriving (Eq, Show)
 classify :: [[ModuleResult]] -> DegreeClass
-classift ms = error "Invalid number of years of results passed"
+classify ms = error "Invalid number of years of results passed"
 classify ms@(y1:y2:y3:[]) 
     | hasPassed == False                                                                        = error "This student has failed one of their years"
     | finalAverageMark >= 70                                                                    = First
