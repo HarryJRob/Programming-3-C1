@@ -89,7 +89,6 @@ canProgress ms
     -- from Module Marks in the higher class or above.
 data DegreeClass = First | UpperSecond | LowerSecond | Third deriving (Eq, Show)
 classify :: [[ModuleResult]] -> DegreeClass
-classify ms = error "Invalid number of years of results passed"
 classify ms@(y1:y2:y3:[]) 
     | hasPassed == False                                                                        = error "This student has failed one of their years"
     | finalAverageMark >= 70                                                                    = First
@@ -214,7 +213,6 @@ findBusyBeavers ns@(x:x':xs)
     | x+x' < x*x'       = possibilities [Multiply] $ findBusyBeavers ((x*x'):xs)
     | x+x' > x*x'       = possibilities [Add] $ findBusyBeavers ((x+x'):xs)
     | x+x' == x*x'      = (possibilities [Add] $ findBusyBeavers ((x*x'):xs)) ++ (possibilities [Multiply] $ findBusyBeavers ((x*x'):xs))
-    | otherwise         = possibilities [Pop] $ findBusyBeavers (x':xs)
     where
         possibilities :: [Instruction] -> [[Instruction]] -> [[Instruction]]
         possibilities as [] = [as]
@@ -241,24 +239,23 @@ simplifyRectangleList rs
     where
         notEmpty@(y:y':ys) = removeEmpties rs
 
-        isEmpty :: Rectangle -> Bool
-        isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
-            | xa >= xb      = True
-            | ya >= yb      = True
-            | otherwise     = False
-
         removeEmpties :: [Rectangle] -> [Rectangle]
         removeEmpties [] = []
         removeEmpties rects@(x:xs)
             | isEmpty x             = removeEmpties xs
             | otherwise             = x:removeEmpties xs
-
+            where
+                isEmpty :: Rectangle -> Bool
+                isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
+                    | xa >= xb      = True
+                    | ya >= yb      = True
+                    | otherwise     = False
+        
         contains :: Rectangle -> Rectangle -> Bool
         contains (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
             | xa <= xc && xb >= xd && ya <= yc && yb >= yd      = True
             | xc <= xa && xd >= xb && yc <= ya && yd >= yb      = True
             | otherwise                                         = False
-
 
         simplify :: Rectangle -> Rectangle -> Rectangle
         simplify (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
