@@ -44,11 +44,11 @@ longestCommonSubList xss = foldr1 mutualsElems xss
         mutualsElems (x : xs) ys 
             | x `elem` ys   = x : mutualsElems xs (removeElem x ys)
             | otherwise     = mutualsElems xs ys
-
-        removeElem :: Eq a => a -> [a] -> [a]
-        removeElem z zs = accepted ++ (tail rejected)
             where
-                (accepted,rejected) = span (/=z) zs
+                removeElem :: Eq a => a -> [a] -> [a]
+                removeElem z zs = accepted ++ (tail rejected)
+                    where
+                        (accepted,rejected) = span (/=z) zs
 
 -- Exercise 3
 -- check whether the given results are sufficient to pass the year 
