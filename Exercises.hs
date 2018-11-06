@@ -314,10 +314,11 @@ unPairAndApply n f = f a b
 -- Exercise 15
 isShellTreeSum :: Int -> Bool
 isShellTreeSum n 
-    | squareShellPair (t,v) == n         = True
+    | n `elem` possibleVals             = True
     | otherwise                         = False
     where
         (t,v) = reverseSquareShell n
+        possibleVals = [ squareShellPair (a,v) | a <- [0..t] ]
         -- value of Tree and Value of sum of node values
 
         reverseSquareShell :: Int -> (Int,Int)
