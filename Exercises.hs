@@ -190,20 +190,16 @@ executeInstructionSequence ns@(x:[]) ins@(y:ys)
 
 executeInstructionSequence ns@(x:x':xs) ins@(y:ys)
     | y == Add              = executeInstructionSequence ((x+x'):xs) ys
-    | y == Multiply         = (x*x'):executeInstructionSequence ((x*x'):xs) ys
+    | y == Multiply         = executeInstructionSequence ((x*x'):xs) ys
     | y == Duplicate        = executeInstructionSequence (x:x:x':xs) ys
     | y == Pop              = executeInstructionSequence (x':xs) ys
     | otherwise             = error "Invalid Instruction Sequence - Invalid instruction given"
 
-
 -- Exercise 8
 optimalSequence :: Int -> [Instruction]
-optimalSequence n 
-    | n == 0                        = []
-    | (round b) == (ceiling b)      = concat (replicate (round b) [Duplicate,Multiply] )
-    | otherwise                     = (replicate (n-1) Duplicate ++ replicate (n-1) Multiply)
+optimalSequence n = (concat $ replicate (n-2^b) [Duplicate]) ++ (concat $ replicate b [Duplicate, Multiply]) ++ (concat $ replicate (n-2^b) [Multiply])
         where 
-            b = logBase 2 (fromIntegral n)
+            b = floor $ logBase 2 $ fromIntegral n 
 
 -- Exercise 9
 findBusyBeavers :: [Int] -> [[Instruction]]
@@ -223,46 +219,59 @@ data Rectangle = Rectangle (Int, Int) (Int, Int) deriving (Eq, Show)
 simplifyRectangleList :: [Rectangle] -> [Rectangle]
 simplifyRectangleList [] = []
 simplifyRectangleList [x] 
-    | isEmpty x     = []
-    | otherwise       = [x]
+    | isEmpty x         = []
+    | otherwise         = [x]
     where
         isEmpty :: Rectangle -> Bool
         isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
-            | xa >= xb      = True
-            | ya >= yb      = True
+            | xa > xb       = True
+            | ya > yb       = True
             | otherwise     = False
 
 simplifyRectangleList rs
     | notEmpty == []                = []
-    | contains y y'                 = (simplify y y'):simplifyRectangleList ys
-    | otherwise                     = y:y':simplifyRectangleList ys
+    | otherwise                     = simplify areaSortedRects
     where
         notEmpty@(y:y':ys) = removeEmpties rs
-
-        removeEmpties :: [Rectangle] -> [Rectangle]
-        removeEmpties [] = []
-        removeEmpties rects@(x:xs)
-            | isEmpty x             = removeEmpties xs
-            | otherwise             = x:removeEmpties xs
             where
-                isEmpty :: Rectangle -> Bool
-                isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
-                    | xa >= xb      = True
-                    | ya >= yb      = True
-                    | otherwise     = False
+                removeEmpties :: [Rectangle] -> [Rectangle]
+                removeEmpties [] = []
+                removeEmpties rects@(x:xs)
+                    | isEmpty x             = removeEmpties xs
+                    | otherwise             = x:removeEmpties xs
+                    where
+                        isEmpty :: Rectangle -> Bool
+                        isEmpty (Rectangle a@(xa,ya) b@(xb,yb))
+                            | xa > xb       = True
+                            | ya > yb       = True
+                            | otherwise     = False
+
+        areaSortedRects = map fst $ rectangleQuickSort $ zip notEmpty $ map areaOfRect notEmpty
+            where
+                areaOfRect :: Rectangle -> Int
+                areaOfRect r@(Rectangle a@(xa,ya) b@(xb,yb)) = (xb - xa) * (yb - ya)
         
-        contains :: Rectangle -> Rectangle -> Bool
-        contains (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
-            | xa <= xc && xb >= xd && ya <= yc && yb >= yd      = True
-            | xc <= xa && xd >= xb && yc <= ya && yd >= yb      = True
-            | otherwise                                         = False
+                rectangleQuickSort :: [(Rectangle, Int)] -> [(Rectangle, Int)]
+                rectangleQuickSort [] = []
+                rectangleQuickSort ((r,a):rs) = (rectangleQuickSort greater) ++ [(r,a)] ++ (rectangleQuickSort lesser)
+                    where
+                        lesser  = [ ra | ra@(r1,a1) <- rs, a1 < a]
+                        greater = [ ra | ra@(r1,a1) <- rs, a1 >= a]
 
-        simplify :: Rectangle -> Rectangle -> Rectangle
-        simplify (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
-            | xa <= xc && xb >= xd && ya <= yc && yb >= yd              = Rectangle a b
-            | xc <= xa && xd >= xb && yc <= ya && yd >= yb              = Rectangle c d
-            | otherwise                                                 = error "Simplify call attempted to simplify two rectangles which cannot be simplified"
-
+        simplify :: [Rectangle] -> [Rectangle]
+        simplify [] = []
+        simplify (x:xs) = x:(simplify $ removeContainedRects x xs)
+                where
+                    --Compare the largest rectangle to the remaning rectangles and remove those which are contained
+                    removeContainedRects :: Rectangle -> [Rectangle] -> [Rectangle]
+                    removeContainedRects _ [] = []
+                    removeContainedRects r rs = [ r1 | r1 <- rs, doesContain r r1 == False ]
+                        where
+                            --Larger Rect passed first
+                            doesContain :: Rectangle -> Rectangle -> Bool
+                            doesContain (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
+                                | xa < xc && xb > xd && ya < yc && yb > yd          = True
+                                | otherwise                                         = False
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
@@ -294,7 +303,8 @@ extractMessage s = convert (extract s)
 -- return a stream which is different from all streams of the given stream
 -- you may choose to use Cantor's diagonal method 
 differentStream :: [[Int]] -> [Int]
-differentStream ss = []
+differentStream [] = []
+differentStream ss@(x:xs) = head x : differentStream (map tail xs)
 
 -- Exercise 14
 -- extract both components from a square shell pair and apply the (curried) function
