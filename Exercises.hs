@@ -246,17 +246,19 @@ simplifyRectangleList rs
                             | ya > yb       = True
                             | otherwise     = False
 
-        areaSortedRects = map fst $ rectangleQuickSort $ zip notEmpty $ map areaOfRect notEmpty
+        areaSortedRects = rectangleQuickSort notEmpty
             where
-                areaOfRect :: Rectangle -> Int
-                areaOfRect r@(Rectangle a@(xa,ya) b@(xb,yb)) = (xb - xa) * (yb - ya)
-        
-                rectangleQuickSort :: [(Rectangle, Int)] -> [(Rectangle, Int)]
+                rectangleQuickSort :: [Rectangle] -> [Rectangle]
                 rectangleQuickSort [] = []
-                rectangleQuickSort ((r,a):rs) = (rectangleQuickSort greater) ++ [(r,a)] ++ (rectangleQuickSort lesser)
+                rectangleQuickSort (r:rs) = (rectangleQuickSort greater) ++ [r] ++ (rectangleQuickSort lesser)
                     where
-                        lesser  = [ ra | ra@(r1,a1) <- rs, a1 < a]
-                        greater = [ ra | ra@(r1,a1) <- rs, a1 >= a]
+                        lesser  = [ r1 | r1 <- rs, areaOfRect r1 < rArea]
+                        greater = [ r1 | r1 <- rs, areaOfRect r1 >= rArea]
+
+                        rArea = areaOfRect r
+
+                        areaOfRect :: Rectangle -> Int
+                        areaOfRect r@(Rectangle a@(xa,ya) b@(xb,yb)) = (xb - xa) * (yb - ya)            
 
         simplify :: [Rectangle] -> [Rectangle]
         simplify [] = []
@@ -270,8 +272,8 @@ simplifyRectangleList rs
                             --Larger Rect passed first
                             doesContain :: Rectangle -> Rectangle -> Bool
                             doesContain (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
-                                | xa < xc && xb > xd && ya < yc && yb > yd          = True
-                                | otherwise                                         = False
+                                | xa <= xc && xb >= xd && ya <= yc && yb >= yd          = True
+                                | otherwise                                             = False
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
