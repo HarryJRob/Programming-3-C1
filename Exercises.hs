@@ -258,12 +258,14 @@ simplifyRectangleList rs
                     | (x `elem` xs) == False        = [x] ++ listToSet xs
                     | otherwise                     = listToSet xs
 
-                orderPoints :: ((Int,Int) -> Int) -> [(Int,Int)] ->[(Int,Int)]
-                orderPoints f [] = [] 
-                orderPoints f (p:ps)= greater ++ [p] ++ lesser
+                layerPoints :: [(Int,Int)] -> [[(Int,Int)]]
+                layerPoints [] = []
+                layerPoints xs = [ x | x <- ]
                     where
-                        greater = [ x | x <- ps, f x >= f p]
-                        lesser  = [ x | x <- ps, f x < f p]
+                        minX = minimum $ map fst xs 
+                        minY = minimum $ map snd xs
+                        maxX = maximum $ map fst xs
+                        maxY = maximum $ map snd xs
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
@@ -273,7 +275,7 @@ drawEllipse x y a b = []
 -- Exercise 12
 -- extract a message hidden using a simple steganography technique
 extractMessage :: String -> String
-extractMessage s = convert (extract s)
+extractMessage s = convert $ extract s 
     where 
         extract :: String -> String
         extract [] = []
