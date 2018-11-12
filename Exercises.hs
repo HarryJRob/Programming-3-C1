@@ -230,7 +230,7 @@ simplifyRectangleList [x]
 
 simplifyRectangleList rs
     | notEmpty == []                = []
-    | otherwise                     = simplify areaSortedRects
+    | otherwise                     = []
     where
         notEmpty@(y:y':ys) = removeEmpties rs
             where
@@ -246,34 +246,24 @@ simplifyRectangleList rs
                             | ya > yb       = True
                             | otherwise     = False
 
-        areaSortedRects = rectangleQuickSort notEmpty
-            where
-                rectangleQuickSort :: [Rectangle] -> [Rectangle]
-                rectangleQuickSort [] = []
-                rectangleQuickSort (r:rs) = (rectangleQuickSort greater) ++ [r] ++ (rectangleQuickSort lesser)
+        layerPoints = orderPoints $ listToSet $ createPoints notEmpty
+            where        
+                createPoints :: [Rectangle] -> [(Int,Int)]
+                createPoints [] = []
+                createPoints ((Rectangle (xa,ya) (xb,yb)):rs) = [ (x,y) | x <- [ya..yb], y <- [xa..xb]] ++ createPoints rs
+
+                listToSet :: Eq a => [a] -> [a]
+                listToSet [] = []
+                listToSet (x:xs) 
+                    | (x `elem` xs) == False        = [x] ++ listToSet xs
+                    | otherwise                     = listToSet xs
+
+                orderPoints :: ((Int,Int) -> Int) -> [(Int,Int)] ->[(Int,Int)]
+                orderPoints f [] = [] 
+                orderPoints f (p:ps)= greater ++ [p] ++ lesser
                     where
-                        lesser  = [ r1 | r1 <- rs, areaOfRect r1 < rArea]
-                        greater = [ r1 | r1 <- rs, areaOfRect r1 >= rArea]
-
-                        rArea = areaOfRect r
-
-                        areaOfRect :: Rectangle -> Int
-                        areaOfRect r@(Rectangle a@(xa,ya) b@(xb,yb)) = (xb - xa) * (yb - ya)            
-
-        simplify :: [Rectangle] -> [Rectangle]
-        simplify [] = []
-        simplify (x:xs) = x:(simplify $ removeContainedRects x xs)
-                where
-                    --Compare the largest rectangle to the remaning rectangles and remove those which are contained
-                    removeContainedRects :: Rectangle -> [Rectangle] -> [Rectangle]
-                    removeContainedRects _ [] = []
-                    removeContainedRects r rs = [ r1 | r1 <- rs, doesContain r r1 == False ]
-                        where
-                            --Larger Rect passed first
-                            doesContain :: Rectangle -> Rectangle -> Bool
-                            doesContain (Rectangle a@(xa,ya) b@(xb,yb)) (Rectangle c@(xc,yc) d@(xd,yd))
-                                | xa <= xc && xb >= xd && ya <= yc && yb >= yd          = True
-                                | otherwise                                             = False
+                        greater = [ x | x <- ps, f x >= f p]
+                        lesser  = [ x | x <- ps, f x < f p]
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
