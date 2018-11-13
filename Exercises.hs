@@ -246,7 +246,7 @@ simplifyRectangleList rs
                             | ya > yb       = True
                             | otherwise     = False
 
-        layerPoints = orderPoints $ listToSet $ createPoints notEmpty
+        layerPoints = layerPoints $ listToSet $ createPoints notEmpty
             where        
                 createPoints :: [Rectangle] -> [(Int,Int)]
                 createPoints [] = []
@@ -260,12 +260,14 @@ simplifyRectangleList rs
 
                 layerPoints :: [(Int,Int)] -> [[(Int,Int)]]
                 layerPoints [] = []
-                layerPoints xs = [ x | x <- ]
+                layerPoints xs = [ (elementsWhereYEq y xs) | y <- [minY..maxY]]
                     where
-                        minX = minimum $ map fst xs 
                         minY = minimum $ map snd xs
-                        maxX = maximum $ map fst xs
                         maxY = maximum $ map snd xs
+
+                        elementsWhereYEq :: Int -> [(Int,Int)] -> [(Int,Int)]
+                        elementsWhereYEq y [] = []
+                        elementsWhereYEq y ps = [ p | p <- ps, snd p == y]
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
@@ -317,13 +319,9 @@ unPairAndApply n f = f a b
 
 -- Exercise 15
 isShellTreeSum :: Int -> Bool
-isShellTreeSum n 
-    | n `elem` possibleVals             = True
-    | otherwise                         = False
+isShellTreeSum n = (sumTree t == v)
     where
         (t,v) = reverseSquareShell n
-        possibleVals = [ squareShellPair (a,v) | a <- [0..t] ]
-        -- value of Tree and Value of sum of node values
 
         reverseSquareShell :: Int -> (Int,Int)
         reverseSquareShell z
@@ -332,5 +330,10 @@ isShellTreeSum n
             where 
                 m = floor (sqrt (fromIntegral z))
 
-        squareShellPair :: (Int,Int) -> Int
-        squareShellPair (x,y) = (max x y)^2 + max x y + x - y
+        sumTree :: Int -> Int
+        sumTree t
+            | t == 1 || t == 0      = 0
+            | otherwise             = n + sumTree lTree + sumTree rTree
+            where
+                (n, subTreePair) = reverseSquareShell t
+                (lTree, rTree) = reverseSquareShell subTreePair
