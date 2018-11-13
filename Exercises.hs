@@ -246,7 +246,7 @@ simplifyRectangleList rs
                             | ya > yb       = True
                             | otherwise     = False
 
-        layerPoints = layerPoints $ listToSet $ createPoints notEmpty
+        points = concat $ sortLayers $ layerPoints $ listToSet $ createPoints notEmpty
             where        
                 createPoints :: [Rectangle] -> [(Int,Int)]
                 createPoints [] = []
@@ -260,14 +260,28 @@ simplifyRectangleList rs
 
                 layerPoints :: [(Int,Int)] -> [[(Int,Int)]]
                 layerPoints [] = []
-                layerPoints xs = [ (elementsWhereYEq y xs) | y <- [minY..maxY]]
+                layerPoints xs = [ [ p | p <- xs, snd p == y] | y <- [minY..maxY]]
                     where
                         minY = minimum $ map snd xs
                         maxY = maximum $ map snd xs
 
-                        elementsWhereYEq :: Int -> [(Int,Int)] -> [(Int,Int)]
-                        elementsWhereYEq y [] = []
-                        elementsWhereYEq y ps = [ p | p <- ps, snd p == y]
+                sortLayers :: [[(Int,Int)]]
+                sortLayers ls = [ (quicksort l) | l <- ls]
+                        where
+                            quickSort :: Eq a => [a] -> [a]
+                            quickSort [] = []
+                            quickSort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
+                                where
+                                    lesser = filter (< p) xs
+                                    greater = filter (>= p) xs
+
+        genRectangles :: [(Int,Int)] -> [Rectangles]
+        genRectangles [] = []
+        genRectangles ps = [ (genLargestRectFromPoint p ps) | p <- ps]
+            where
+                genLargestRectFromPoint :: (Int,Int) -> [(Int,Int)] -> [Rectangle]
+                genLargestRectFromPoint p ps = 
+
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
@@ -300,7 +314,9 @@ extractMessage s = convert $ extract s
 -- you may choose to use Cantor's diagonal method 
 differentStream :: [[Int]] -> [Int]
 differentStream [] = []
-differentStream ss@(x:xs) = head x : differentStream (map tail xs)
+differentStream ss@(x:xs)
+    | odd $ head x     = 0 : differentStream (map tail xs)
+    | even $ head x    = 1 : differentStream (map tail xs)
 
 -- Exercise 14
 -- extract both components from a square shell pair and apply the (curried) function
