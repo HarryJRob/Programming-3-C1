@@ -229,11 +229,18 @@ simplifyRectangleList [x]
             | otherwise     = False
 
 simplifyRectangleList rs
-    | notEmpty == []                = []
-    | otherwise                     = []
+    | notEmptyOrContained == []                 = []
+    | length notEmptyOrContained == 1           = notEmptyOrContained
+    | otherwise                                 = genRects (getPoints notEmptyOrContained) []
     where
-        notEmpty@(y:y':ys) = removeEmpties rs
+        notEmptyOrContained@(y:y':ys) = removeEmpties $ listToSet rs
             where
+                listToSet :: Eq a => [a] -> [a]
+                listToSet [] = []
+                listToSet (x:xs) 
+                    | (x `elem` xs) == False        = [x] ++ listToSet xs
+                    | otherwise                     = listToSet xs
+
                 removeEmpties :: [Rectangle] -> [Rectangle]
                 removeEmpties [] = []
                 removeEmpties rects@(x:xs)
@@ -246,11 +253,12 @@ simplifyRectangleList rs
                             | ya > yb       = True
                             | otherwise     = False
 
-        points = concat $ sortLayers $ layerPoints $ listToSet $ createPoints notEmpty
+        getPoints :: [Rectangle] -> [(Int,Int)]
+        getPoints rs = listToSet $ createPoints rs
             where        
                 createPoints :: [Rectangle] -> [(Int,Int)]
                 createPoints [] = []
-                createPoints ((Rectangle (xa,ya) (xb,yb)):rs) = [ (x,y) | x <- [ya..yb], y <- [xa..xb]] ++ createPoints rs
+                createPoints ((Rectangle (xa,ya) (xb,yb)):rs) = [ (x,y) | y <- [ya..yb], x <- [xa..xb]] ++ createPoints rs
 
                 listToSet :: Eq a => [a] -> [a]
                 listToSet [] = []
@@ -258,35 +266,76 @@ simplifyRectangleList rs
                     | (x `elem` xs) == False        = [x] ++ listToSet xs
                     | otherwise                     = listToSet xs
 
-                layerPoints :: [(Int,Int)] -> [[(Int,Int)]]
-                layerPoints [] = []
-                layerPoints xs = [ [ p | p <- xs, snd p == y] | y <- [minY..maxY]]
-                    where
-                        minY = minimum $ map snd xs
-                        maxY = maximum $ map snd xs
+genRects :: [(Int,Int)] -> [Rectangle] -> [Rectangle]
+genRects [] [] = []
+genRects [] rs = rs
+genRects ps rs 
+    | psNotCovered == []            = rs
+    | otherwise                     = genRects ps ((expand [topLeft]):rs)
+    where
+        psNotCovered = complement ps $ getPoints rs
 
-                sortLayers :: [[(Int,Int)]]
-                sortLayers ls = [ (quicksort l) | l <- ls]
-                        where
-                            quickSort :: Eq a => [a] -> [a]
-                            quickSort [] = []
-                            quickSort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
-                                where
-                                    lesser = filter (< p) xs
-                                    greater = filter (>= p) xs
-
-        genRectangles :: [(Int,Int)] -> [Rectangles]
-        genRectangles [] = []
-        genRectangles ps = [ (genLargestRectFromPoint p ps) | p <- ps]
+        maxY = maximum $ map snd psNotCovered
+        minX = minimum [ x | (x,y) <- psNotCovered, y == maxY]
+        topLeft = (minX,maxY)
+    
+        expand :: [(Int,Int)] -> Rectangle
+        expand rps
+            | all (canExtendDown) rps && all (canExtendRight) (rps ++ pointsExpandedDown)           = expand $ listToSet (rps ++ pointsExpandedDownAndRight)
+            | all (canExtendDown) rps                                                               = expand $ listToSet (rps ++ pointsExpandedDown) 
+            | all (canExtendRight) rps                                                              = expand $ listToSet (rps ++ pointsExpandedRight) 
+            | otherwise                                                                             = Rectangle bottomLeft topRight
             where
-                genLargestRectFromPoint :: (Int,Int) -> [(Int,Int)] -> [Rectangle]
-                genLargestRectFromPoint p ps = 
+                bottomLeft                  = (minX,minY)
+                    where
+                        minY = minimum $ map snd rps
+                        minX = minimum [ x | (x,y) <- rps, y == minY]
+                topRight                    = (maxX,maxY)
+                    where
+                        maxY = maximum $ map snd rps
+                        maxX = maximum [ x | (x,y) <- rps, y == maxY]
+
+                pointsExpandedDown          = [ (x,y-1) | (x,y) <- rps]
+                pointsExpandedRight         = [ (x+1,y) | (x,y) <- rps]
+                pointsExpandedDownAndRight  = ( pointsExpandedDown ++ [ (x+1,y) | (x,y) <- (rps ++ pointsExpandedDown) ])
+
+        canExtendDown :: (Int,Int) -> Bool
+        canExtendDown (x,y) = (x,y-1) `elem` ps
+
+        canExtendRight :: (Int,Int) -> Bool
+        canExtendRight (x,y) = (x+1,y) `elem` ps
+
+        complement :: Eq a => [a] -> [a] -> [a]
+        complement xs ys = [ x | x <- xs, (x `elem` ys) == False ]
+
+        listToSet :: Eq a => [a] -> [a]
+        listToSet [] = []
+        listToSet (x:xs) 
+            | (x `elem` xs) == False        = [x] ++ listToSet xs
+            | otherwise                     = listToSet xs
+
+        getPoints :: [Rectangle] -> [(Int,Int)]
+        getPoints rs = listToSet $ createPoints rs
+            where        
+                createPoints :: [Rectangle] -> [(Int,Int)]
+                createPoints [] = []
+                createPoints ((Rectangle (xa,ya) (xb,yb)):rs) = [ (x,y) | y <- [ya..yb], x <- [xa..xb]] ++ createPoints rs
 
 
 -- Exercise 11
 -- convert an ellipse into a minimal list of rectangles representing its image
 drawEllipse :: Float -> Float -> Float -> Float -> [Rectangle]
-drawEllipse x y a b = []
+drawEllipse x y a b = genRects points []
+    where
+        points = [ (x,y) | y <- yBoundaries, x <- xBoundaries, isInsideEllipse (x,y) ]
+            where
+                yBoundaries = [((round y - ceiling b))..((round y + ceiling b))]
+                xBoundaries = [((round x - ceiling a))..((round x + ceiling a))]
+
+                isInsideEllipse :: (Int,Int) -> Bool
+                isInsideEllipse (px,py)
+                    | ( ((fromIntegral px) - x)^2/(a^2) + ((fromIntegral py)-y)^2 / (b^2) ) <= 1                = True
+                    | otherwise                                                                                 = False
 
 -- Exercise 12
 -- extract a message hidden using a simple steganography technique
